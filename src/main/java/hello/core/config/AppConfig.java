@@ -9,8 +9,11 @@ import hello.core.member.MemoryMemberRepository;
 import hello.core.order.OrderService;
 import hello.core.order.OrderServiceImpl;
 
+/**
+ * 메소드 명과 리턴타입으로 역할을 한 눈에 보게끔 하고
+ * 구현 클래스가 한눈에 보이죵 :)
+ */
 public class AppConfig {
-
   public MemberService memberService() {
     return new MemberServiceImpl(memberRepository());
   }

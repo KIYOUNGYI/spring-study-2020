@@ -6,6 +6,8 @@ import hello.core.config.AppConfig;
 import hello.core.member.MemberService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 
 public class SingletonTest {
@@ -26,6 +28,7 @@ public class SingletonTest {
 
 
   @Test
+  @DisplayName("싱글톤 패턴을 적용한 객체 사용")
   void 싱글톤_객체_테스트() {
     SingletonService sg1 = SingletonService.getInstance();
     SingletonService sg2 = SingletonService.getInstance();
@@ -34,7 +37,18 @@ public class SingletonTest {
     assertThat(sg1).isSameAs(sg2);
   }
 
-  public static void main(String[] args) {
-//    SingletonService sg = new SingletonService();
+  @Test
+  @DisplayName("스프링 컨테이너 사용")
+  void name() {
+    AppConfig appConfig = new AppConfig();
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    MemberService m1 = ac.getBean("memberService", MemberService.class);
+    MemberService m2 = ac.getBean("memberService", MemberService.class);
+
+    System.out.println("m1:" + m1.toString());
+    System.out.println("m2:" + m2.toString());
+
+    assertThat(m1).isSameAs(m2);
   }
 }

@@ -16,7 +16,9 @@ public class SingletonTest {
   @DisplayName("스프링 없는 순수 di 컨테이너")
   void 순수() {
     AppConfig appConfig = new AppConfig();
+    //1. 조회 : 호출할 때 마다 객체를 생성
     MemberService m1 = appConfig.memberService();
+
     MemberService m2 = appConfig.memberService();
 
     System.out.println("m1:" + m1.toString());

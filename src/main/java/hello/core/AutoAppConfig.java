@@ -28,8 +28,8 @@ public class AutoAppConfig {
    * [/Users/glowdayz/Documents/personal-study/core/out/production/classes/hello/core/member/MemoryMemberRepository.class]
    * and overriding is disabled.
    */
-  @Bean(name = "memoryMemberRepository")
-  public MemberRepository memberRepository() {
-    return new MemoryMemberRepository();
-  }
+//  @Bean(name = "memoryMemberRepository")
+//  public MemberRepository memberRepository() {
+//    return new MemoryMemberRepository();
+//  }
 }

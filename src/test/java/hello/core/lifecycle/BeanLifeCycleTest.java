@@ -2,6 +2,7 @@ package hello.core.lifecycle;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +12,7 @@ public class BeanLifeCycleTest {
   @Test
   @DisplayName("lifeCycleTest_널찍힘")
   public void lifeCycleTest_널찍힘() {
-    AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(LifeCycleConfig.class);
-    //ConfigurableApplicationContext
+    ConfigurableApplicationContext ac = new AnnotationConfigApplicationContext(LifeCycleConfig.class);//부모 인터페이스는 자식 인터페이스를 담을 수 있다.
     NetworkClient client = ac.getBean(NetworkClient.class);
     ac.close();
   }
@@ -65,8 +65,8 @@ public class BeanLifeCycleTest {
 
     @Bean
     public NetworkClient networkClient() {
-      NetworkClient networkClient = new NetworkClient();
-      networkClient.setUrl("http://hello-spring.dev");
+      NetworkClient networkClient = new NetworkClient();//요기서 프린트 찍히고, 커넥트 호출하고 , 초기화 메시지 보내주는데, url 은 널값이 찍힌다.
+      networkClient.setUrl("http://hello-spring.dev");//사실 이걸 생성자에 넣어도 되긴 하는데, 설정이 객체 생성 후 또 들어올 수 있거든요 ~
       return networkClient;
     }
   }
@@ -95,6 +95,7 @@ public class BeanLifeCycleTest {
 
   @Configuration
   static class LifeCycleConfigV4 {
+
     @Bean
     public NetworkClientV4 networkClientV4() {
       NetworkClientV4 nc = new NetworkClientV4();

@@ -4,6 +4,9 @@ public class NetworkClient {
 
   private String url;
 
+  /**
+   * 생성자에서 (객체 생성할 떄 ) connect(),call("xxx) 초기화 연결 메시지 보낸다고 했을 때.
+   */
   public NetworkClient() {
     System.out.println("생성자 호출, url = " + url);
     connect();

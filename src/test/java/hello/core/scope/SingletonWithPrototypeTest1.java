@@ -6,14 +6,15 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Scope;
 
 public class SingletonWithPrototypeTest1 {
 
   @Test
-  @DisplayName("프로토타입 스코프 - 싱글톤 빈과 함께 사용시 문제점 ")
-  void prototyeFind() {
+  void prototypeFind() {
 
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(PrototypeBean.class);
     PrototypeBean prototypeBean1 = ac.getBean(PrototypeBean.class);
@@ -43,17 +44,13 @@ public class SingletonWithPrototypeTest1 {
   }
 
   @Scope("singleton")
-  static class ClientBean  {
+  static class ClientBean {
 
-    private final PrototypeBean prototypeBean;//생성 시점에 주입
-
-    //    @Autowired
-    public ClientBean(PrototypeBean prototypeBean) {
-      System.out.println("CientBean.CientBean");
-      this.prototypeBean = prototypeBean;
-    }
+    @Autowired
+    private ObjectProvider<PrototypeBean> prototypeBeanObjectProvider;
 
     public int logic() {
+      PrototypeBean prototypeBean = prototypeBeanObjectProvider.getObject();
       prototypeBean.addCount();
       int count = prototypeBean.getCount();
       return count;

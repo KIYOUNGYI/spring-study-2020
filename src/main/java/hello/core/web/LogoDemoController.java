@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class LogoDemoController {
 
   private final LogDemoService logDemoService;
-//  private final MyLogger myLogger; (이것만 있으면 에러)
-  private final ObjectProvider<MyLogger> myLoggerProvider;
+  private final MyLogger myLogger;
+//  private final ObjectProvider<MyLogger> myLoggerProvider;
 
   @RequestMapping("log-demo")
   @ResponseBody
   public String logDemo(HttpServletRequest request) {
     String requestURL = request.getRequestURL().toString();
-    MyLogger myLogger = myLoggerProvider.getObject();
-
+//    MyLogger myLogger = myLoggerProvider.getObject();
+    System.out.println("myLogger = "+myLogger.getClass()); // 껍데기 클래스
     myLogger.setRequestURL(requestURL);
     myLogger.log("controller test");
     logDemoService.logic("testId");

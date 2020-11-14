@@ -30,7 +30,7 @@ public class AllBeanTest {
   void findAllBean() {
 //    ApplicationContext ac = new AnnotationConfigApplicationContext(DiscountService.class, AutoAppConfig.class);
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(DiscountService.class, AutoAppConfig.class);
-    getAppBeans(ac);
+//    getAppBeans(ac);
 
     DiscountService ds = ac.getBean(DiscountService.class);
     Member member = new Member(1l, "userA", Grade.VIP);
@@ -46,21 +46,21 @@ public class AllBeanTest {
   @Test
   void findAllBeanByConfig() {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(DiscountPolicyConfig.class, DiscountServiceNoPoly.class);
-    getAppBeans(ac);
+//    getAppBeans(ac);
+//
+//    DiscountPolicyConfig dc = ac.getBean(DiscountPolicyConfig.class);
+////    DiscountPolicy fixDiscountPolicy = dc.fixDiscountPolicy();
+////    DiscountPolicy rateDiscountPolicy = dc.rateDiscountPolicy();
+//
+//    DiscountServiceNoPoly dsNoPoly = ac.getBean(DiscountServiceNoPoly.class);
+//
+//    Member member = new Member(1l, "userA", Grade.VIP);
+//    int discountPrice = dsNoPoly.discount(member, 10000, fixDiscountPolicy);
+//    assertThat(dsNoPoly).isInstanceOf(DiscountServiceNoPoly.class);
+//    assertThat(discountPrice).isEqualTo(1000);
 
-    DiscountPolicyConfig dc = ac.getBean(DiscountPolicyConfig.class);
-    DiscountPolicy fixDiscountPolicy = dc.fixDiscountPolicy();
-    DiscountPolicy rateDiscountPolicy = dc.rateDiscountPolicy();
-
-    DiscountServiceNoPoly dsNoPoly = ac.getBean(DiscountServiceNoPoly.class);
-
-    Member member = new Member(1l, "userA", Grade.VIP);
-    int discountPrice = dsNoPoly.discount(member, 10000, fixDiscountPolicy);
-    assertThat(dsNoPoly).isInstanceOf(DiscountServiceNoPoly.class);
-    assertThat(discountPrice).isEqualTo(1000);
-
-    int discountPrice2 = dsNoPoly.discount(member, 20000, rateDiscountPolicy);
-    assertThat(discountPrice2).isEqualTo(2000);
+//    int discountPrice2 = dsNoPoly.discount(member, 20000, rateDiscountPolicy);
+//    assertThat(discountPrice2).isEqualTo(2000);
   }
 
 

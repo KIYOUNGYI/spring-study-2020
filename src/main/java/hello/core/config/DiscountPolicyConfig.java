@@ -6,8 +6,8 @@ import hello.core.discount.RateDiscountPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-//@Configuration
-//public class DiscountPolicyConfig {
+@Configuration
+public class DiscountPolicyConfig {
 //  @Bean
 //  public DiscountPolicy rateDiscountPolicy() {
 //    return new RateDiscountPolicy();
@@ -16,4 +16,4 @@ import org.springframework.context.annotation.Configuration;
 //  public DiscountPolicy fixDiscountPolicy() {
 //    return new FixDiscountPolicy();
 //  }
-//}
+}

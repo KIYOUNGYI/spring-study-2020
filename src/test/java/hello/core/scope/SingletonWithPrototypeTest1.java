@@ -29,7 +29,7 @@ public class SingletonWithPrototypeTest1 {
   }
 
   @Test
-  @DisplayName("싱글톤 빈에서 프로토타입 빈 사용")
+  @DisplayName("싱글톤 빈에서 프로토타입 빈 사용, (이 부분 잘 기억 안난다. 다시 해보자)")
   void singletonClientUsePrototype() {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(ClientBean.class, PrototypeBean.class);
     ClientBean clientBean1 = ac.getBean(ClientBean.class);
@@ -40,7 +40,8 @@ public class SingletonWithPrototypeTest1 {
     System.out.println("clientBean1 = " + clientBean1);
     System.out.println("clientBEan2 = " + clientBean2);
     assertThat(clientBean1).isSameAs(clientBean2);
-    assertThat(count2).isEqualTo(2);
+//    assertThat(count2).isEqualTo(2);
+    assertThat(count2).isEqualTo(1);
   }
 
   @Scope("singleton")

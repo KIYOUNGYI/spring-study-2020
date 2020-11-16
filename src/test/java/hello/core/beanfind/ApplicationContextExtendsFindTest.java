@@ -50,7 +50,7 @@ public class ApplicationContextExtendsFindTest {
   }
 
   @Test
-  @DisplayName("부모타입으로_모두_조회하기")
+  @DisplayName("부모타입으로_모두_조회하기_좋은건_아니지 ㅋㅋㅋ")
   void 부모타입으로_모두_조회하기() {
     Map<String, Object> beansOfType = ac.getBeansOfType(Object.class);
     for (String key : beansOfType.keySet()) {

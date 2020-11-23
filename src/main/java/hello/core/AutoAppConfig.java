@@ -27,6 +27,8 @@ public class AutoAppConfig {
    * A bean with that name has already been defined in file
    * [/Users/glowdayz/Documents/personal-study/core/out/production/classes/hello/core/member/MemoryMemberRepository.class]
    * and overriding is disabled.
+   * 수동으로 빈으로 등록된 것이 우선권을 갖는다. 자동으로 등록된 빈을 오버라이딩시킴
+   *
    */
 //  @Bean(name = "memoryMemberRepository")
 //  public MemberRepository memberRepository() {

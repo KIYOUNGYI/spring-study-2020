@@ -11,9 +11,10 @@ public class BeanLifeCycleTest {
 
   @Test
   @DisplayName("lifeCycleTest_널찍힘")
-  public void lifeCycleTest_널찍힘() {
+  public void lifeCycleTest() {
     ConfigurableApplicationContext ac = new AnnotationConfigApplicationContext(LifeCycleConfig.class);//부모 인터페이스는 자식 인터페이스를 담을 수 있다.
     NetworkClient client = ac.getBean(NetworkClient.class);
+
     ac.close();
   }
   // 생성자 호출, url = null
@@ -52,7 +53,7 @@ public class BeanLifeCycleTest {
 //  close + http://hello-spring.dev
 
   @Test
-  @DisplayName("lifeCycleTest_post_construct_pre_destroy_사용")
+  @DisplayName("lifeCycleTest @PostConstruct, @PreDestroy 사용")
   public void lifeCycleTest_post_construct_pre_destroy_사용() {
     AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(LifeCycleConfigV4.class);
     NetworkClientV4 client = ac.getBean(NetworkClientV4.class);

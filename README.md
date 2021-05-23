@@ -431,5 +431,182 @@ public class MemberApp {
 
 # 스프링 컨테이너와 빈
 
+## 
+```
+ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+
+```
+- ApplicationContext 를 스프링 컨테이너라 한다.
+- ApplicationContext 는 인터페이스이다.
+- 스프링 컨테이너는 XML을 기반으로 만들 수 있고, 애노테이션 기반의 자바 설정 클래스로 만들 수 있다. 직전에 AppConfig 를 사용했던 방식이 애노테이션 기반의 자바 설정 클래스로 스프링 컨테이너를 만든 것 이다.
+- 자바 설정 클래스를 기반으로 스프링 컨테이너( ApplicationContext )를 만들어보자.
+```
+new AnnotationConfigApplicationContext(AppConfig.class); 
+```
+- 이 클래스는 ApplicationContext 인터페이스의 구현체이다.
+
+## 과정
+AppConfig.class -> 스프링 컨테이저 (빈 저장소)에 저장됨
+key   :  method name (카멜로 지어주는게 관례)
+value :  참조값(주소값)
+
+빈 이름을 직접 부여할 수 있지만, 쉽게 쉽게 가는게 좋다. 
+빈 이름 중복 안되게 하는게 좋음(관례) [문제는 쉽게 쉽게 푸는게 짱이다] 예전에는 빈이름 중복되면 덮어버렸는데 요즘은 튕겨버린다.
+
+1] 빈 등록
+2] 빈 주입 (di) (주소 가르치는 것)
 
 
+실제로는 자바 코드로 스프링 빈 을 등록하면 생성자를 호출하면서 의존관계 주입도 한번에 처리된다.
+
+
+## 컨테이너에 등록된 빈 조회 방법
+
+```
+/**
+   * 스프링이 자체적으로 확장하기 위해 등록된 빈도 출력이 된다!
+   */
+  @Test
+  @DisplayName("모든 빈 출력하기")
+  void findBeans() {
+    String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+    for (String beanDefinitionName : beanDefinitionNames) {
+      Object bean = ac.getBean(beanDefinitionName);//오브젝트로 나오는 이유 -> 리턴이 뭐가 될 지 모르니까!!!
+      System.out.println("name->" + bean.toString());
+    }
+  }
+```
+
+```
+@Test
+  @DisplayName("애플리케이션 빈 출력")
+  void findApplicationBeans() {
+    String[] beanDefinitionNames = ac.getBeanDefinitionNames();
+    for (String beanDefinitionName : beanDefinitionNames) {
+    
+      BeanDefinition beanDefinition = ac.getBeanDefinition(beanDefinitionName);
+      if (beanDefinition.getRole() == BeanDefinition.ROLE_APPLICATION) {
+        Object bean = ac.getBean(beanDefinitionName);//오브젝트로 나오는 이유 -> 리턴이 뭐가 될 지 모르니까!!!
+        System.out.println("name -> " + bean);
+      }
+    }
+  }
+```
+
+```
+    ROLE_APPLICATION : 내가 직접 등록한 빈
+    ROLE_INFRASTRUCTURE : 스프링에서 등록한 빈
+```
+
+## 빈 조회 방법
+
+- 스프링 컨테이너에서 스프링 빈을 찾는 가장 기본적인 조회 방법
+- ac.getBean(빈이름, 타입)
+- ac.getBean(타입)
+- 조회 대상 스프링 빈이 없으면 예외 발생
+
+ 구체적인 코드는 AppApplicationContextSameBeanFindTest.java 파일 참고
+
+구체타입으로 조회하면 유연성은 떨어지는 거지, 빈 이름으로 조회하는게 아무래도 좀 더 유연함.
+
+## 동일한 타입 2개 이상인 경우
+
+ApplicationContextExtendsFindTest.java 파일 참고
+
+## 상속 관계 조회
+부모 타입으로 조회하면, 자식 타입도 함께 조회한다. (쫘악 끌려 나온다)
+
+모든 코드들은 사실 extends Object 라 보면 된다. 단지 생략된것일뿐
+
+ApplicationContextExtendsFindTest.java
+
+
+## BeanFactory와 ApplicationContext
+
+결론부터 애기하면 우리는 거의 ApplicationContext 만 사용한다.
+
+빈팩토리 - 최상위 인터페이스
+그 아래에는 어플리케이션 컨텍스트 (빈 팩토리 + 부가 기능)
+그 아래에 어노테이션컨피그 어플리케이션 컨텍스트가 있음
+
+- BeanFactory
+ - 스프링 컨테이너의 최상위 인터페이스다.
+ - 스프링 빈을 관리하고 조회하는 역할을 담당한다.
+ - getBean() 을 제공한다.
+ - 지금까지 우리가 사용했던 대부분의 기능은 BeanFactory가 제공하는 기능이다.
+
+- ApplicationContext
+ - BeanFactory 기능을 모두 상속받아서 제공한다.
+ - 빈을 관리하고 검색하는 기능을 BeanFactory가 제공해주는데, 그러면 둘의 차이가 뭘까? 애플리케이션을 개발할 때는 빈은 관리하고 조회하는 기능은 물론이고, 수 많은 부가기능이 필요하다.
+ - 메시지소스를 활용한 국제화 기능 (ex> 예를 들어서 한국에서 들어오면 한국어로, 영어권에서 들어오면 영어로 출력 환경변수
+ - 로컬, 개발, 운영등을 구분해서 처리 애플리케이션 이벤트
+ - 이벤트를 발행하고 구독하는 모델을 편리하게 지원
+ - 편리한 리소스 조회
+ - 파일, 클래스패스, 외부 등에서 리소스를 편리하게 조회
+
+
+## 스프링 빈 설정 메타 정보 - BeanDefinition
+
+- BeanDefinition을 직접 생성해서 스프링 컨테이너에 등록할 수 도 있다. 하지만 실무에서 BeanDefinition을 직접 정의하거나 사용할 일은 거의 없다. 어려우면 그냥 넘어가면 된다^^!
+- BeanDefinition에 대해서는 너무 깊이있게 이해하기 보다는, 스프링이 다양한 형태의 설정 정보를 BeanDefinition으로 추상화해서 사용하는 것 정도만 이해하면 된다.
+- 가끔 스프링 코드나 스프링 관련 오픈 소스의 코드를 볼 때, BeanDefinition 이라는 것이 보일 때가 있다. 이때 이러한 메커니즘을 떠올리면 된다.
+
+
+1] Bean Definition 으로 스프링 빈 설정 메타 정보를 추상화한다.
+2] 만드는 방식 2가지 -> 직접 등록 / 팩토리 빈을 통해 등록 (일반적으로 컨피그를 쓰는게 팩토리 빈을 통해 등록하는 거라 보면 됨)
+
+
+# 싱글톤 컨테이너
+
+SingleTonTest.java
+
+```
+@Test
+  @DisplayName("스프링 없는 순수 di 컨테이너")
+  void 순수() {
+    AppConfig appConfig = new AppConfig();
+    MemberService m1 = appConfig.memberService();
+    MemberService m2 = appConfig.memberService();
+
+    System.out.println("m1:" + m1.toString());
+    System.out.println("m2:" + m2.toString());
+
+    assertThat(m1).isNotSameAs(m2);
+
+  }
+```
+
+##  싱글톤 패턴
+- 클래스의 인스턴스가 딱 1개만 생성되는 것을 보장하는 디자인 패턴이다. 
+- 그래서 객체 인스턴스를 2개 이상 생성하지 못하도록 막아야 한다.
+ - private 생성자를 사용해서 외부에서 임의로 new 키워드를 사용하지 못하도록 막아야 한다.
+
+
+```
+public class SingletonService {
+
+  private static final SingletonService instance = new SingletonService();
+
+  public static SingletonService getInstance() {
+    return instance;
+  }
+
+  //누군가 new 로 만들지 못하게 막는 거.
+  private SingletonService() {
+  }
+
+  public void logic() {
+    System.out.println("싱글톤 객체 로직 호출");
+  }
+}
+
+  @Test
+  @DisplayName("싱글톤 패턴을 적용한 객체 사용")
+  void 싱글톤_객체_테스트() {
+    SingletonService sg1 = SingletonService.getInstance();
+    SingletonService sg2 = SingletonService.getInstance();
+    System.out.println(sg1.toString());
+    System.out.println(sg2.toString());
+    assertThat(sg1).isSameAs(sg2);
+  }
+```

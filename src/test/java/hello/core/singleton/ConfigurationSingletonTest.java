@@ -19,7 +19,7 @@ public class ConfigurationSingletonTest {
    * //real call AppConfig.memberService call AppConfig.memberRepository call AppConfig.orderService
    */
   @Test
-  public void dummy() {
+  public void configurationTest() {
     ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
 
     MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
@@ -30,7 +30,7 @@ public class ConfigurationSingletonTest {
     MemberRepository m2 = orderService.getMemberRepository();
 
     System.out.println("memberService -> memberRepository = " + m1.toString());
-    System.out.println("memberService -> memberRepository = " + m2.toString());
+    System.out.println("orderService -> memberRepository = " + m2.toString());
     System.out.println("memberRepository = " + memberRepository);
     Assertions.assertThat(m1).isSameAs(m2).isSameAs(memberRepository);
 

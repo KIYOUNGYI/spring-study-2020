@@ -639,12 +639,140 @@ public class SingletonService {
  - 지저분한 코드 불필요
  - solid 위반(x) , private 생성자로 부터 자유롭게 싱글톤 사용 가능.
 
+```
+@Test
+  @DisplayName("스프링 컨테이너와 싱글톤")
+  void name() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    MemberService m1 = ac.getBean("memberService", MemberService.class);
+    MemberService m2 = ac.getBean("memberService", MemberService.class);
+
+    System.out.println("m1:" + m1.toString());
+    System.out.println("m2:" + m2.toString());
+
+    assertThat(m1).isSameAs(m2);
+  }
+  //m1:hello.core.member.MemberServiceImpl@6253c26
+  //m2:hello.core.member.MemberServiceImpl@6253c26
+```
 
 
+- 싱글톤 컨테이너 적용 후
+ - 각각의 클라이언트가 memberSerivce 를 요청해도 동일한 memberService 를 반환한다.
+ - 컨테이너 덕분에 고객의 요청이 들어올 때마다 객체를 생성하는 것이 아니라, 이미 만들어진 객체를 공유해서 효율적으로 재사용할 수 있다.
+
+| 참고 : 스프링 빈 등록방식은 기본적으로 싱글톤 방식임, 물론 이런 방식만 지원하는 것은 아님(빈 스코프). 99%는 싱글톤 쓴다.
 
 
+## 주의사항 (몇년에 한 번씩 고난을 겪는)
 
+- stateful (x)
+- stateless (o)
 
+```
+    여러 클라이언트가 하나의 객체를 공유하기 때문에 싱글톤 객체는 상태를 유지(stateful)하게 설계하면 안된다.
+```
 
+- 무상태(stateless)하게 설계하면 안된다.
+ - 특정 클라이언트에 의존적인 필드가 있으면 안된다.
+ - 특정 클라가 값을 변경할 수 있는 필드가 있으면 안된다!
+ - 가급적 읽기만 가능해야 한다.
+ - 필드 대신에 자바에서 공유되지 않는, 지역변수, 파라미터, ThreadLocal 등을 사용해야 한다.
+
+- 스프링 빈의 필드에 공유값을 설정하면 정말 큰 장애가 발생할 수 있다.
+
+```
+public class StatefulService {
+
+  private int price;//10,000 -> 20,000
+
+  public void Order(String name, int price) {
+    System.out.println("name = " + name + " price = " + price);
+    this.price = price; //여기가 문제!
+  }
+
+  public int getPrice() {
+    return price;
+  }
+}
+
+  @Test
+  @DisplayName("이렇게 되면 망하는거야~~~, 이 예제는 단순한 건데 멀티스레드 환경에선 더 복잡하겠지. (멀티스레드는 어디서 공부하는게 효율적일까) ")
+  public void satefulServiceSingleton_망하는_케이스() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+    StatefulService s1 = ac.getBean(StatefulService.class);
+    StatefulService s2 = ac.getBean(StatefulService.class);
+
+    //thread a: useA 10_000 주문
+    s1.Order("userA", 10000);
+    
+    //thread b: userB 20_000 주문
+    s2.Order("userB", 20000);
+
+    //ThreadA: 사용자a 주문 금액 조회 (a 가 주문하고 조회하려고 하는데, b의 주문 금액이 출력되는 꼴) / 기대값은 10_000 원, 
+    int price = s1.getPrice();
+    System.out.println("price : " + price);
+    Assertions.assertThat(s1.getPrice()).isEqualTo(20000);
+  }
+  
+  static class TestConfig {
+
+    @Bean
+    public StatefulService statefulService() {
+      return new StatefulService();
+    }
+
+    @Bean
+    public StatefulServiceWIthoutField statefulServiceWIthoutField() {
+      return new StatefulServiceWIthoutField();
+    }
+
+  }
+```
+- 최대한 단순하게 설명한 예제이다.
+- ThreadA가 사용자 A 코드를 호출하고 ThreadB가 사용자 B 코드를 호출한다고 가정.
+- StatefulService 의 price 필드는 공유되는 필드인데, 특정 클라가 값을 변경한다.
+- 사용자 A 의 주문금액은 10_000 원이 되어야 하는데, 20_000 원이라는 결과가 나왔다.
+- 실무에서 몇년에 한번 이런 류의 문제가 터진다고 한다.
+- 공유 필드는 정말 정말 조심해야 한다. 스프링 빈은 항상 stateless 로 설계해야 한다.
+
+- 솔루션 => 멤버 변수를 빼버리면 된다.
+```
+public class StatefulServiceWIthoutField {
+
+  public int Order(String name, int price) {
+    System.out.println("name = " + name + " price = " + price);
+    return price;
+  }
+  
+  
+  static class TestConfig {
+   @Bean
+    public StatefulServiceWIthoutField statefulServiceWIthoutField() {
+      return new StatefulServiceWIthoutField();
+    }
+  }
+  
+  @Test
+  @DisplayName("필드를 없앴소~")
+  public void satefulServiceSingleton_보완한_케이스() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(TestConfig.class);
+    StatefulServiceWIthoutField s1 = ac.getBean(StatefulServiceWIthoutField.class);
+    StatefulServiceWIthoutField s2 = ac.getBean(StatefulServiceWIthoutField.class);
+
+    int price1 = s1.Order("userA", 10000);
+    int price2 = s2.Order("userB", 20000);
+
+    Assertions.assertThat(price1).isEqualTo(10000);
+    Assertions.assertThat(price2).isEqualTo(20000);
+  }
+```
+ex> 나의 아이디인데 다른 사람 이름, 나의 결재 내역인데 다른 사람 결재 내역... => 복구하는데 몇 달 걸림.
+위의 예제니까 잘 보이지만, 상속 관계에서 복잡한데선 잘 안보일수도.
+
+```
+공유필드는 항상 조심.
+```
 
 

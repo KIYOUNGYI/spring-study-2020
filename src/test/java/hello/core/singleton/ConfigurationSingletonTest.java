@@ -37,6 +37,9 @@ public class ConfigurationSingletonTest {
   }
 
 
+  /**
+   * 만약 AppConfig.java 에서 @Configuration 어노테이션을 뗀다면??
+   */
   @Test
   void congiutrationDeep() {
     ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);

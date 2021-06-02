@@ -775,4 +775,127 @@ ex> 나의 아이디인데 다른 사람 이름, 나의 결재 내역인데 다�
 공유필드는 항상 조심.
 ```
 
+## @Configuration 과 싱글톤
+
+
+```
+@Configuration
+public class AppConfig {
+
+  //@Bean memberService -> new MemoryMemberRepository()
+  //@Bean orderService -> new MemoryMemberRepository()
+  //call AppConfig.memberService
+  //call AppConfig.memberRepository
+  //call AppConfig.memberRepository
+  //call AppConfig.orderService
+  //call AppConfig.memberRepository
+  //
+
+
+  @Bean
+  public MemberService memberService() {
+    System.out.println("call AppConfig.memberService");
+    return new MemberServiceImpl(memberRepository());
+  }
+
+  @Bean
+  public MemberRepository memberRepository() {
+    System.out.println("call AppConfig.memberRepository");
+    return new MemoryMemberRepository();
+  }
+
+  @Bean
+  public DiscountPolicy discountPolicy() {
+    return new RateDiscountPolicy();
+  }
+
+  @Bean
+  public OrderService orderService() {
+    System.out.println("call AppConfig.orderService");
+    return new OrderServiceImpl(memberRepository(), discountPolicy());
+  }
+}
+
+```
+
+
+```
+  //MemberServiceImpl,OrderServiceImpl 에 추가
+  //테스트 용도
+  public MemberRepository getMemberRepository() {
+    return memberRepository;
+  }
+```
+
+
+```
+ @Test
+  public void dummy() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    MemberServiceImpl memberService = ac.getBean("memberService", MemberServiceImpl.class);
+    OrderServiceImpl orderService = ac.getBean("orderService", OrderServiceImpl.class);
+    MemberRepository memberRepository = ac.getBean("memberRepository", MemberRepository.class);
+
+    MemberRepository m1 = memberService.getMemberRepository();
+    MemberRepository m2 = orderService.getMemberRepository();
+
+    System.out.println("memberService -> memberRepository = " + m1.toString());
+    System.out.println("memberService -> memberRepository = " + m2.toString());
+    System.out.println("memberRepository = " + memberRepository);
+    Assertions.assertThat(m1).isSameAs(m2).isSameAs(memberRepository);
+
+  }
+```
+세개다 같음.
+
+그리고 호출도 3번만 호출함.
+
+예상(순서는 보장 못함)
+call AppConfig.memberService 
+call AppConfig.memberRepository
+call AppConfig.memberRepository
+call AppConfig.orderService 
+call AppConfig.memberRepository
+
+실제
+call AppConfig.memberService
+call AppConfig.memberRepository
+call AppConfig.orderService
+
+스프링이 어떻게든, 싱글톤을 보장해준다는 것을 알 수 있음.
+
+
+## @Configuration 과 바이트 코드 조작의 마법
+
+스프링이 자바 코드까진 어떻게 하진 못함.
+그래서 스프링은 클래스의 바이트코드를 조작하는 라이브러리를 사용한다.
+모든 비밀은 @Configuration 을 적용한 AppConfig 에 있다.
+
+```
+ @Test
+  void congiutrationDeep() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+    AppConfig bean = ac.getBean(AppConfig.class);
+    System.out.println("bean = " + bean.getClass());//이건 내가 만든 클래스가 아니다!!!!
+  }
+  
+//[console] bean = class hello.core.config.AppConfig$$EnhancerBySpringCGLIB$$f8f0ae19
+```
+순수한 자바 클래스는 class hello.core.AppConfig 이런 식으로 찍혀야 함.
+
+이것은 내가 만든 클래스가 아니라 스프링이 CGLIB 라는 바이트코드 조작 라이브러리를 사용해서 AppConfig 클래스를 상속받은 임의의 다른 클래스를 만들고, 그 다른 클래스를 스프링 빈으로 등록한 것이다.
+
+
+```
+@Configuration 코드 AppConfig.java 에서 빼도 동작은 한다.
+하지만 싱글톤은 깨진다. 상단의 테스트 돌려봐도 결과가 깨진다.
+```
+뭐 사실 @Autowired 를 사용하면 해결할 수 있긴 한데, 이건 나중.
+
+
+정리
+-  @Bean 만 드록해도 스프링 빈으로 등록되지만, 싱글톤을 보장하진 않는다.
+ -  memberRepository() 처럼, 의존주입이 필요해서 메소드를 직접 호출할 때 싱글톤을 보장하지 않는다.
+-  <b> 크게 고민할필요없다. 스프링 설정 정보는 항상 @Configuration 을 사용하자. </b>
 

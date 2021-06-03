@@ -899,3 +899,116 @@ call AppConfig.orderService
  -  memberRepository() 처럼, 의존주입이 필요해서 메소드를 직접 호출할 때 싱글톤을 보장하지 않는다.
 -  <b> 크게 고민할필요없다. 스프링 설정 정보는 항상 @Configuration 을 사용하자. </b>
 
+# 컴포넌트 정리
+
+## 컴포넌트 스캔과 의존관계 자동 주입 시작하기
+
+- 어떻게 이걸 다 일일이 등록할래?? (휴먼에러 발생한다)
+- 스프링은 설정 정보가 없어도 자동으로 등록하는 컴포넌트 스캔이라는 기능을 제공한다.
+- 또 의존관계도 자동으로 주입하는 @Autowired 기능도 제공한다.
+
+- 컴포넌트 스캔은 이름 그대로 @Component 어노테이션이 붙은 클래스를 스캔해서 스프링 빈으로 등록한다.
+
+| 참고 : @Configuration 이 컴포넌트 스캔의 대상이 된 이유도 @Configuration 소스코드를 열어보면 @Component 어노테이션이 붙어있기 때문이다.
+
+
+```
+
+@Configuration
+@ComponentScan(excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = Configuration.class))
+//예제를 돌리기 위해서 넣어둠. AppConfig Configuration 들어가면 @component 달려있음. 고로 이녀석도 검색 대상이 되면서 충돌나요
+//컨피규레이션 어노테이션 달린건 컴포넌트 스캔 대상에서 제외시킬거야
+//실무에서는 이러진 않겠죠. 이렇게 한 것은 예제코드를 살리기 위해서!!!
+public class AutoAppConfig {
+...
+@Component
+public class MemoryMemberRepository implements MemberRepository{
+...
+
+```
+
+그런데 의존관계 주입은?
+
+```
+@Component
+public class MemberServiceImpl implements MemberService {
+
+    private final MemberRepository memberRepository;
+    
+    @Autowired//<- 요거 //ac.getBean(MemberRepository.class) 와 비슷
+    public MemberRepository(MemberRepository memberRepository){
+        this.memberRepository = memberRepository;
+    }
+}
+```
+
+
+```
+public class AutoAppConfigTest {
+  @Test
+  void basicScan() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AutoAppConfig.class);
+    MemberService memberService = ac.getBean(MemberService.class);
+    assertThat(memberService).isInstanceOf(MemberService.class);
+  }
+}
+```
+로그 보면 컴포넌트 스캔 잘 되는 것도 볼 수 있다.
+
+
+@ComponentScan은 @Component 가 붙은 모든 클래스를 스프링 빈으로 등록한다.
+이때 스프링 빈의 기본 이름은 클래스 명을 사용하되 맨 앞글자만 소문자를 사용한다.
+- 빈 이름 전략 : MemberServiceImpl 클래스 -> memberServiceImpl
+- 빈 이름 직접 지정 : 만약 스프링 빈 이름을 직접 지정하고 싶으면 @Compoent("memberXXX") 뭐 이런식으로 지정하면 된다.
+- 생성자에 Autowired 지정하면, 스프링 컨테이너가 자동으로 해당 스프링 빈을 찾아서 주입한다.
+- 기본 조회 전략은 타입이 같은 빈을 찾아서 주입한다.
+ - getBean(MemberRepository.class) 와 동일하다고 이해하면 된다.
+- 생성자에 파라미터가 많아도 자동으로 알아서 촥촥촥 주입.
+
+## 탐색 위치와 기본 스캔 대상
+탐색 위치 지정할 수 있음 (basePackages = "") <- 이거 없으면 라이브러리도 탐색을 하기 때문에 유용하게 쓰이는 옵션이다~
+탐색 위치 여러개 지정할 수도 있음.
+basePackageclasess=""
+
+default => @ComponentScan 붙인 패키지부터 하위 싹 다 찾음. 
+- 만약 지정하지 않으면 @ComponentScan 이 붙은 설정 정보 클래스의 패키지가 시작 위치가 된다.
+
+### 권장 방법
+개인적으로 즐겨 사용하는 방법 : 패키지 위치 지정하지 않고, 설정 정보 클래스의 위치를 프로젝트 최상단에 두는 것이다. 최근 스프링 부트도 이 방법을 기본으로 제공한다.
+
+
+예를 들어 아래와 같은 프로젝트 구조라 치자.
+
+- com.hello
+- com.hello.service
+- com.hello.repository
+
+- com.hello -> 프로젝트 시작 루트, 여기에 AppConfig 같은 메인 설정을 두고, @ComponentScan 애노테이션을 붙이고, basePackages 는 지정 생략한다..
+
+이렇게 하면 com.hello 를 포함한 하위는 스캔 대상이 된다.
+스프링 부트를 사용하면 스프링 부트의 대표 시작 정보인 @SpringBootApplication 를 이 프로젝트 시작 루트 위치에 두는 것이 관례이다. (그리고 이 설정 안에 바로 @ComponentScan이 들어있다!)
+
+스캔 기본 대상
+- @Controller
+- @Service
+- @Repository
+- @Configuration
+- @Component
+
+
+ 참고: 사실 애노테이션에는 상속관계라는 것이 없다. 그래서 이렇게 애노테이션이 특정 애노테이션을 들고 있는 것을 인식할 수 있는 것은 자바 언어가 지원하는 기능은 아니고, 스프링이 지원하는 기능이다.
+컴포넌트 스캔의 용도 뿐만 아니라 다음 애노테이션이 있으면 스프링은 부가 기능을 수행한다. 
+- @Controller : 스프링 MVC 컨트롤러로 인식
+- @Repository : 스프링 데이터 접근 계층으로 인식하고, 데이터 계층의 예외를 스프링 예외로 변환해준다. 
+- @Configuration : 앞서 보았듯이 스프링 설정 정보로 인식하고, 스프링 빈이 싱글톤을 유지하도록 추가 처리함.
+- @Service : 사실 @Service 는 특별한 처리를 하지 않는다. 대신 개발자들이 핵심 비즈니스 로직이 여기에 있구나 라고 비즈니스 계층을 인식하면 된다.
+> 참고: useDefaultFilters 옵션은 기본으로 켜져있는데, 이 옵션을 끄면 기본 스캔 대상들이 제외된다. 그 냥 이런 옵션이 있구나 정도 알고 넘어가자.
+
+
+## 필터
+- includeFilters : 컴포넌트 스캔 대상을 추가로 지정한다.
+- excludeFilters : 컴포넌트 스캔에서 제외할 대상을 지정한다.
+
+
+
+
